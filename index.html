@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turnkey Policy Dropdown Wizard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <main class="wrap">
+    <h1>Turnkey Policy Dropdown Wizard</h1>
+    <p class="lead">
+      Every decision is made via dropdowns. Each dropdown adapts to previous selections when possible, then the wizard
+      prescribes a Turnkey policy set and renders a Mermaid logic flow. Outputs refresh automatically as you update selections.
+    </p>
+    <p class="sources">
+      Sources:
+      <a href="https://docs.turnkey.com/concepts/policies/language" target="_blank" rel="noreferrer">Turnkey policy language</a>
+      ·
+      <a href="https://docs.turnkey.com/concepts/policies/examples/access-control" target="_blank" rel="noreferrer">Turnkey access-control examples</a>
+    </p>
+
+    <section class="layout">
+      <article class="card">
+        <div class="head">Sequential Dropdown Decisions</div>
+        <form id="wizardForm">
+          <div class="wizard-meta">
+            <div id="stepCounter" class="step-counter"></div>
+            <div class="progress">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <section class="wizard-step" data-step="0">
+            <p class="q">1) What policy domain and activity scope are you designing?</p>
+            <p class="hint">Scope dropdowns are linked: resource choice adjusts action choices.</p>
+
+            <div class="field">
+              <label>Common scenarios</label>
+              <div id="scenarioGrid" class="scenario-grid"></div>
+            </div>
+
+            <div class="field">
+              <label for="policyPreset">Policy domain preset</label>
+              <select id="policyPreset">
+                <option value="treasury_transfers" selected>Treasury transfer controls</option>
+                <option value="key_export_controls">Private key export controls</option>
+                <option value="policy_admin_controls">Policy administration controls</option>
+                <option value="user_admin_controls">User administration controls</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="scopeMode">Scope mode</label>
+              <select id="scopeMode">
+                <option value="resourceAction" selected>Scope by activity.resource + activity.action</option>
+                <option value="activityType">Scope by specific activity.type</option>
+              </select>
+            </div>
+
+            <div id="resourceActionWrap" class="grid2">
+              <div class="field">
+                <label for="resource">activity.resource</label>
+                <select id="resource">
+                  <option value="WALLET" selected>WALLET</option>
+                  <option value="PRIVATE_KEY">PRIVATE_KEY</option>
+                  <option value="POLICY">POLICY</option>
+                  <option value="USER">USER</option>
+                  <option value="ORGANIZATION">ORGANIZATION</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="action">activity.action</label>
+                <select id="action"></select>
+              </div>
+            </div>
+
+            <div id="activityTypeWrap" class="field hidden">
+              <label for="activityType">activity.type</label>
+              <select id="activityType">
+                <option value="ACTIVITY_TYPE_SIGN_TRANSACTION_V2" selected>ACTIVITY_TYPE_SIGN_TRANSACTION_V2</option>
+                <option value="ACTIVITY_TYPE_APPROVE_ACTIVITY">ACTIVITY_TYPE_APPROVE_ACTIVITY</option>
+                <option value="ACTIVITY_TYPE_DELETE_POLICY_V3">ACTIVITY_TYPE_DELETE_POLICY_V3</option>
+                <option value="ACTIVITY_TYPE_UPDATE_ROOT_QUORUM">ACTIVITY_TYPE_UPDATE_ROOT_QUORUM (Root governed)</option>
+                <option value="ACTIVITY_TYPE_SET_ORGANIZATION_FEATURE">ACTIVITY_TYPE_SET_ORGANIZATION_FEATURE (Root governed)</option>
+                <option value="ACTIVITY_TYPE_REMOVE_ORGANIZATION_FEATURE">ACTIVITY_TYPE_REMOVE_ORGANIZATION_FEATURE (Root governed)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="chain">Chain profile</label>
+              <select id="chain">
+                <option value="none" selected>None / non-chain-specific</option>
+                <option value="eth">Ethereum</option>
+                <option value="solana">Solana</option>
+                <option value="tron">Tron</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="wizard-step" data-step="1">
+            <p class="q">2) How should authorization and allow logic be defined?</p>
+            <p class="hint">Consensus selection controls which identity dropdown appears.</p>
+
+            <div class="field">
+              <label for="consensusMode">Consensus model</label>
+              <select id="consensusMode">
+                <option value="approverCount" selected>Minimum approver count</option>
+                <option value="userId">Specific user ID approver</option>
+                <option value="userTag">User tag approver</option>
+                <option value="credentialType">Credential type gate</option>
+              </select>
+            </div>
+
+            <div id="approverCountWrap" class="field">
+              <label for="minApprovers">Required approver count</label>
+              <select id="minApprovers">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <div id="userIdWrap" class="field hidden">
+              <label for="userIdPreset">Allowed user ID</label>
+              <select id="userIdPreset">
+                <option value="user_treasury_lead" selected>user_treasury_lead</option>
+                <option value="user_ops_lead">user_ops_lead</option>
+                <option value="user_security_lead">user_security_lead</option>
+              </select>
+            </div>
+
+            <div id="userTagWrap" class="field hidden">
+              <label for="userTagPreset">Required user tag</label>
+              <select id="userTagPreset">
+                <option value="treasury" selected>treasury</option>
+                <option value="ops">ops</option>
+                <option value="security">security</option>
+                <option value="finance-admin">finance-admin</option>
+              </select>
+            </div>
+
+            <div id="credentialTypeWrap" class="field hidden">
+              <label for="credentialType">Required credential type</label>
+              <select id="credentialType">
+                <option value="CREDENTIAL_TYPE_WEBAUTHN" selected>CREDENTIAL_TYPE_WEBAUTHN</option>
+                <option value="CREDENTIAL_TYPE_API_KEY_P256">CREDENTIAL_TYPE_API_KEY_P256</option>
+                <option value="CREDENTIAL_TYPE_API_KEY_SECP256K1">CREDENTIAL_TYPE_API_KEY_SECP256K1</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="allowlistMode">Counterparty allowlist mode</label>
+              <select id="allowlistMode"></select>
+            </div>
+
+            <div class="field">
+              <label for="extraAllowPreset">Additional allow condition preset</label>
+              <select id="extraAllowPreset">
+                <option value="none" selected>None</option>
+                <option value="require_webauthn">Require WebAuthn credential</option>
+                <option value="two_approvers_plus_treasury_tag">Require 2 approvers and treasury tag</option>
+                <option value="three_approvers">Require 3 approvers</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="wizard-step" data-step="2">
+            <p class="q">3) Which deny guardrails should be prescribed?</p>
+            <p class="hint">ETH guardrail dropdowns are enabled only on Ethereum chain profile.</p>
+
+            <div class="field">
+              <label for="riskProfile">Risk profile</label>
+              <select id="riskProfile">
+                <option value="conservative">Conservative</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="flexible">Flexible</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="denyDeleteMode">Delete guardrail mode</label>
+              <select id="denyDeleteMode">
+                <option value="auto" selected>Auto (depends on risk profile)</option>
+                <option value="always">Always deny DELETE</option>
+                <option value="never">Never deny DELETE</option>
+              </select>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="ethDenyMode">ETH deny mode</label>
+                <select id="ethDenyMode"></select>
+              </div>
+
+              <div class="field">
+                <label for="ethCapPreset">ETH value cap</label>
+                <select id="ethCapPreset"></select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="extraDenyPreset">Additional deny condition preset</label>
+              <select id="extraDenyPreset">
+                <option value="none" selected>None</option>
+                <option value="deny_policy_delete_activity">Deny ACTIVITY_TYPE_DELETE_POLICY_V3</option>
+                <option value="deny_org_feature_changes">Deny organization feature toggles</option>
+                <option value="deny_wallet_delete">Deny WALLET DELETE actions</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="wizard-step" data-step="3">
+            <p class="q">4) How should root governance and expression safety be configured?</p>
+            <p class="hint">Root identity and split strategy adapt based your selected mode.</p>
+
+            <div class="field">
+              <label for="rootQuorumProfile">Root quorum profile</label>
+              <select id="rootQuorumProfile">
+                <option value="q_1_1">1/1 (single root)</option>
+                <option value="q_2_3" selected>2/3</option>
+                <option value="q_3_5">3/5</option>
+                <option value="q_5_7">5/7</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="rootSoloMode">Root override policy mode</label>
+              <select id="rootSoloMode">
+                <option value="none" selected>No explicit root solo policy</option>
+                <option value="root_user">Allow named root user</option>
+                <option value="break_glass_tag">Allow break-glass tag</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="rootIdentity">Root identity selector</label>
+              <select id="rootIdentity">
+                <option value="user_root_primary" selected>user_root_primary</option>
+                <option value="user_root_backup">user_root_backup</option>
+                <option value="user_ciso">user_ciso</option>
+              </select>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="policySplitMode">Policy split strategy</label>
+                <select id="policySplitMode">
+                  <option value="auto" selected>Auto (split when context profiles are mixed)</option>
+                  <option value="always">Always split into separate policies</option>
+                  <option value="never">Never split</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="contextProfile">Context keyword profile</label>
+                <select id="contextProfile">
+                  <option value="wallet_private_key" selected>wallet + private_key</option>
+                  <option value="policy_org">policy + organization</option>
+                  <option value="user_credential">user + credential</option>
+                  <option value="none">Single context / none</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="implicitNotesMode">Implicit permission note display</label>
+              <select id="implicitNotesMode">
+                <option value="show" selected>Show implicit permission reminders</option>
+                <option value="hide">Hide implicit permission reminders</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="wizard-step" data-step="4">
+            <p class="q">5) Review and generate policy prescription</p>
+            <p class="hint">This summary reflects your dropdown decisions before generating final output.</p>
+            <div id="reviewOutput" class="review"></div>
+          </section>
+
+          <div class="nav">
+            <button id="backBtn" class="secondary" type="button">Back</button>
+            <button id="nextBtn" class="secondary" type="button">Next</button>
+            <button id="generateBtn" class="primary hidden" type="submit">Generate / Refresh</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="card">
+        <div class="head">Policy Prescription + Logic Flow</div>
+        <div class="output">
+          <div id="status" class="status"></div>
+
+          <div class="subhead">Prescribed Policy Set</div>
+          <pre id="prescriptionOutput"></pre>
+
+          <div class="subhead">Why This Set</div>
+          <pre id="rationaleOutput"></pre>
+
+          <div class="subhead">Turnkey Policy Bundle (JSON)</div>
+          <pre id="policyOutput"></pre>
+
+          <div class="subhead">Mermaid Logic Flow</div>
+          <pre id="mermaidOutput"></pre>
+          <div id="preview" class="preview"></div>
+
+          <div class="copy-actions">
+            <button id="copyPrescription" class="secondary" type="button">Copy Prescription</button>
+            <button id="copyPolicies" class="secondary" type="button">Copy Policies JSON</button>
+            <button id="copyMermaid" class="secondary" type="button">Copy Mermaid</button>
+            <button id="downloadPng" class="secondary" type="button">Download PNG</button>
+          </div>
+
+          <p class="note">
+            Finalize expressions and activity values against your Turnkey organization before deploying policies.
+          </p>
+        </div>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
