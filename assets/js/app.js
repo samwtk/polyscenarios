@@ -483,10 +483,8 @@ function renderCommonScenarios() {
       }
       applyPresetConfig(scenario.preset, scenario.overrides || {});
       syncDependentDropdowns();
-      const data = collectInput();
-      const built = buildPolicies(data);
       if (currentStep === lastStep) {
-        reviewOutEl.textContent = buildReviewText(data, built);
+        renderReviewSummary();
       }
       await generatePrescription();
       setStatus(`Applied scenario: ${scenario.name}`, "ok");
@@ -794,21 +792,74 @@ function getText(id) {
   return select.options[select.selectedIndex]?.textContent || select.value;
 }
 
-function buildReviewText(data, built) {
-  return [
-    `Policy domain: ${getText("policyPreset")}`,
-    `Scope mode: ${getText("scopeMode")}`,
-    `Scope target: ${data.scopeMode === "activityType" ? data.activityType : `${data.resource} + ${data.action}`}`,
-    `Chain profile: ${getText("chain")}`,
-    `Consensus model: ${getText("consensusMode")}`,
-    `Allowlist mode: ${getText("allowlistMode")}`,
-    `Risk profile: ${getText("riskProfile")}`,
-    `Delete guardrail: ${getText("denyDeleteMode")}`,
-    `Root quorum: ${data.rootQuorumLabel}`,
-    `Root override mode: ${getText("rootSoloMode")}`,
-    `Split strategy: ${getText("policySplitMode")}`,
-    `Estimated deny policies: ${built.policies.filter((p) => p.effect === "EFFECT_DENY").length}`
-  ].join("\n");
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildReviewRow(label, value) {
+  return `<div class="review-row"><span class="review-k">${escapeHtml(label)}</span><span class="review-v">${escapeHtml(value)}</span></div>`;
+}
+
+function buildReviewMarkup(data, built) {
+  const scopeTarget = data.scopeMode === "activityType" ? data.activityType : `${data.resource} + ${data.action}`;
+  const denyCount = built.policies.filter((policy) => policy.effect === "EFFECT_DENY").length;
+  const allowCount = built.policies.filter((policy) => policy.effect === "EFFECT_ALLOW").length;
+  const rootOverrideConfigured = data.rootSoloMode !== "none" ? "Yes" : "No";
+  const rootGovernedScope = built.rootOnly ? "Yes" : "No";
+
+  return `
+    <div class="review-grid">
+      <section class="review-section">
+        <p class="review-section-title">Scope</p>
+        ${buildReviewRow("Policy domain", getText("policyPreset"))}
+        ${buildReviewRow("Scope mode", getText("scopeMode"))}
+        ${buildReviewRow("Scope target", scopeTarget)}
+        ${buildReviewRow("Chain profile", getText("chain"))}
+      </section>
+
+      <section class="review-section">
+        <p class="review-section-title">Authorization</p>
+        ${buildReviewRow("Consensus model", getText("consensusMode"))}
+        ${buildReviewRow("Allowlist mode", getText("allowlistMode"))}
+        ${buildReviewRow("Risk profile", getText("riskProfile"))}
+        ${buildReviewRow("Delete guardrail", getText("denyDeleteMode"))}
+        ${buildReviewRow("ETH deny mode", getText("ethDenyMode"))}
+      </section>
+
+      <section class="review-section">
+        <p class="review-section-title">Governance</p>
+        ${buildReviewRow("Root quorum", data.rootQuorumLabel)}
+        ${buildReviewRow("Root override mode", getText("rootSoloMode"))}
+        ${buildReviewRow("Root identity", getText("rootIdentity"))}
+        ${buildReviewRow("Root-governed scope", rootGovernedScope)}
+      </section>
+
+      <section class="review-section">
+        <p class="review-section-title">Safety</p>
+        ${buildReviewRow("Split strategy", getText("policySplitMode"))}
+        ${buildReviewRow("Context profile", getText("contextProfile"))}
+        ${buildReviewRow("Split required", built.splitRequired ? "Yes" : "No")}
+        ${buildReviewRow("Implicit notes", getText("implicitNotesMode"))}
+      </section>
+    </div>
+
+    <div class="review-metrics">
+      <span class="metric-chip">Allow policies: ${allowCount}</span>
+      <span class="metric-chip">Deny policies: ${denyCount}</span>
+      <span class="metric-chip">Root override configured: ${rootOverrideConfigured}</span>
+    </div>
+  `;
+}
+
+function renderReviewSummary() {
+  const data = collectInput();
+  const built = buildPolicies(data);
+  reviewOutEl.innerHTML = buildReviewMarkup(data, built);
 }
 
 function syncScopeActionOptions() {
@@ -893,10 +944,8 @@ function showStep(index) {
   nextBtn.classList.toggle("hidden", currentStep === lastStep);
   generateBtn.classList.toggle("hidden", currentStep !== lastStep);
 
-  const data = collectInput();
-  const built = buildPolicies(data);
   if (currentStep === lastStep) {
-    reviewOutEl.textContent = buildReviewText(data, built);
+    renderReviewSummary();
   }
 }
 
@@ -1074,10 +1123,8 @@ form.addEventListener("change", async (event) => {
     applyPresetConfig(event.target.value);
   }
   syncDependentDropdowns();
-  const data = collectInput();
-  const built = buildPolicies(data);
   if (currentStep === lastStep) {
-    reviewOutEl.textContent = buildReviewText(data, built);
+    renderReviewSummary();
   }
   await generatePrescription();
 });

@@ -314,13 +314,75 @@ pre {
 }
 
 .review {
-  border: 1px dashed #cad5e7;
-  background: #fbfdff;
+  border: 1px solid #d7e0ed;
+  background: linear-gradient(180deg, #fbfdff, #f7faff);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   margin-top: 8px;
-  font-size: 0.88rem;
-  color: #334155;
+  font-size: 0.86rem;
+  color: #1e293b;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.review-section {
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.review-section-title {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px dashed #e4eaf4;
+  padding: 5px 0;
+}
+
+.review-row:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.review-k {
+  color: #59677d;
+  white-space: nowrap;
+}
+
+.review-v {
+  text-align: right;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.review-metrics {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.metric-chip {
+  border: 1px solid #d2ddee;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  background: #ffffff;
+  color: #28415f;
 }
 
 .preview {
@@ -349,6 +411,10 @@ pre {
   }
 
   .scenario-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-grid {
     grid-template-columns: 1fr;
   }
 
